@@ -1,0 +1,53 @@
+name: FI fetch API Request - Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      fiu_token:
+        description: "Access token issued to FIU for initiating the consent request"
+        required: true
+      private_key:
+        description: "FIU private key for signing the request"
+        required: true
+      aa_recipient_id:
+        description: "Account Aggregator recipient ID"
+        default: "AA-SIMULATOR"
+        required: true
+      txn_id:
+        description: "Transaction ID"
+        required: true
+      session_id:
+        description: "Session ID"
+        required: true  
+
+jobs:
+  fi_fetch_workflow:
+    runs-on: ubuntu-latest
+    env:
+      TXN_ID: "${{ github.event.inputs.txn_id }}"
+      SESSION_ID: "${{ github.event.inputs.session_id }}"
+      PRIVATE_KEY: "${{ github.event.inputs.private_key }}"
+      FIU_TOKEN: "${{ github.event.inputs.fiu_token }}"
+      AA_RECIPIENT_ID: "${{ github.event.inputs.aa_recipient_id }}"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "19"
+
+      - name: Install Dependencies
+        run: npm install axios jose uuid
+      - name: Sign JWS and Send Request
+        run: node ./fiu-aa-workflow/fi-fetch.js
+        env:
+          CUSTOMER_ID: "${{ github.event.inputs.customer_id }}"
+          MOBILE_NUMBER: "${{ github.event.inputs.mobile_number }}"
+          PRIVATE_KEY: "${{ github.event.inputs.private_key }}"
+          FIU_TOKEN: "${{ github.event.inputs.fiu_token }}"
+          AA_RECIPIENT_ID: "${{ github.event.inputs.aa_recipient_id }}"
+          TXN_ID: "${{ github.event.inputs.txn_id }}"
+          SESSION_ID: "${{ github.event.inputs.session_id }}"  

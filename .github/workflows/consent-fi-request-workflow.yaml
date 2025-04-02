@@ -1,0 +1,58 @@
+name: Consent Handle, Fetch and FI Request API Request - Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      fiu_token:
+        description: "Access token issued to FIU for initiating the consent request"
+        required: true
+      private_key:
+        description: "FIU private key for signing the request"
+        required: true
+      aa_recipient_id:
+        description: "Account Aggregator recipient ID"
+        default: "AA-SIMULATOR"
+        required: true
+      txn_id:
+        description: "Transaction ID"
+        required: true  
+      consent_handle:
+        description: "Consent Handle"
+        required: true
+
+jobs:
+  consent_workflow:
+    runs-on: ubuntu-latest
+    env:
+      PRIVATE_KEY: "${{ github.event.inputs.private_key }}"
+      FIU_TOKEN: "${{ github.event.inputs.fiu_token }}"
+      AA_RECIPIENT_ID: "${{ github.event.inputs.aa_recipient_id }}"
+      TXN_ID: "${{ github.event.inputs.txn_id }}"
+      CONSENT_HANDLE: "${{ github.event.inputs.consent_handle }}"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "19"
+
+      - name: Install Dependencies
+        run: npm install axios jose uuid
+
+      - name: Sign JWS and Send Request
+        run: node ./fiu-aa-workflow/consent-fi-request.js
+        env:
+          PRIVATE_KEY: "${{ github.event.inputs.private_key }}"
+          FIU_TOKEN: "${{ github.event.inputs.fiu_token }}"
+          AA_RECIPIENT_ID: "${{ github.event.inputs.aa_recipient_id }}"
+          TXN_ID: "${{ github.event.inputs.txn_id }}"
+          CONSENT_HANDLE: "${{ github.event.inputs.consent_handle }}"
+
+      - name: Upload FI Request Data Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fi_request
+          path: fi_request.json      
