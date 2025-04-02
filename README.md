@@ -45,7 +45,7 @@ This workflow handles consent requests and sends FI requests. It is triggered ma
 
 #### **Jobs**
 
-##### `consent_workflow`
+##### `consent_fi_request_workflow`
 
 Runs on `ubuntu-latest` and performs the following steps:
 
