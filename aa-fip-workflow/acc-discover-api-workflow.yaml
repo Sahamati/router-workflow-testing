@@ -1,0 +1,60 @@
+name: Account Discover API Request - Workflow
+on:
+  workflow_dispatch:
+    inputs:
+      txnId:
+        description: "Transaction ID"
+        required: true 
+      privateKeyPEM:
+        description: "FIP private key for signing the request"
+        required: true
+      fipToken:
+        description: "FIP Token"
+        required: true
+      recipientId:
+        description: "Account Aggregator recipient ID"
+        default: "AA-SIMULATOR"
+        required: true
+      otpToken:
+        description: "otp token for signing the request"
+        required: true 
+      router_url:
+        description: "Router URL (optional)"
+        default: "https://api.sandbox.sahamati.org.in/router/v2"
+        required: false
+
+jobs:
+  consent_workflow:
+    runs-on: ubuntu-latest
+    env: 
+      PRIVATE_KEY: "${{ github.event.inputs.private_key }}"
+      FIP_TOKEN: "${{ github.event.inputs.fip_token }}"
+      AA_RECIPIENT_ID: "${{ github.event.inputs.aa_recipient_id }}"
+      OTP_TOKEN: "${{ github.event.inputs.otp_token }}"
+      
+
+  steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "19"
+
+      - name: Install Dependencies
+        run: npm install axios jose uuid
+      - name: Sign JWS and Send Request
+        run: node ./aa-fip-workflow/acc-discover.js
+        env:
+          PRIVATE_KEY: "${{ github.event.inputs.privateKeyPEM }}"
+          FIP_TOKEN: "${{ github.event.inputs.fipToken }}"
+          AA_RECIPIENT_ID: "${{ github.event.inputs.recipientId }}"
+          LINK_OTP: "${{ github.event.inputs.otpToken }}"
+          ROUTER_URL: "${{ github.event.inputs.router_url }}"
+          TXN_ID: "${{ github.event.inputs.txnId }}"
+      - name: Upload Consent Data Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: consent_data
+          path: consent.json  

@@ -1,0 +1,61 @@
+name: FI Fetch API Request - Workflow
+on:
+workflow_dispatch:
+    inputs:
+      txnId:
+        description: "Transaction ID"
+        required: true 
+      privateKeyPEM:
+        description: "FIP private key for signing the request"
+        required: true
+      fipToken:
+        description: "FIP Token"
+        required: true
+      recipientId:
+        description: "Account Aggregator recipient ID"
+        default: "AA-SIMULATOR"
+        required: true
+      router_url:
+        description: "Router URL (optional)"
+        default: "https://api.sandbox.sahamati.org.in/router/v2"
+        required: false
+
+    jobs:
+     consent_workflow:
+    runs-on: ubuntu-latest
+    env: 
+      PRIVATE_KEY: "${{ github.event.inputs.private_key }}"
+      FIP_TOKEN: "${{ github.event.inputs.fip_token }}"
+      AA_RECIPIENT_ID: "${{ github.event.inputs.aa_recipient_id }}"
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "19"
+
+      - name: Install Dependencies
+        run: npm install axios jose uuid
+      - name: Sign JWS and Send Request
+        run: node ./aa-fip-workflow/fi-req.js
+        env:
+          PRIVATE_KEY: "${{ github.event.inputs.privateKeyPEM }}"
+          FIP_TOKEN: "${{ github.event.inputs.fipToken }}"
+          AA_RECIPIENT_ID: "${{ github.event.inputs.recipientId }}" 
+          ROUTER_URL: "${{ github.event.inputs.router_url }}"
+          TXN_ID: "${{ github.event.inputs.txnId }}"
+          LINK_REF: "${{ github.event.inputs.linkRefNumber }}"
+          FIP_ID: "${{ github.event.inputs.fipId }}"
+          CONSENT_ID: "${{ github.event.inputs.consentId }}"
+          DH_KEY_VALUE: "${{ github.event.inputs.dhKeyValue }}"
+          NONCE: "${{ github.event.inputs.nonce }}"
+          CONSENT_SIGNATURE: "${{ github.event.inputs.digitalSignature }}"
+          DH_PARAMS: "${{ github.event.inputs.dhParams }}"
+      - name: Upload Consent Data Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: consent_data
+          path: consent.json  
